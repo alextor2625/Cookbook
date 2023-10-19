@@ -9,6 +9,7 @@ const recipeSchema = new Schema({
   ingredients: String,
   instructions: String,
   author: { type: Schema.Types.ObjectId, ref: "User" },
+  alteredBy: { type: Schema.Types.ObjectId, ref: "User", default: undefined },
   image: {
     type: String,
     default:

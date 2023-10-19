@@ -53,10 +53,10 @@ router.post("/signup", (req, res, next) => {
         .then((createdUser) => {
           // Deconstruct the newly created user object to omit the password
           // We should never expose passwords publicly
-          const { email, name, _id, image } = createdUser;
+          const { email, name, _id, image, cookbooks, recipes } = createdUser;
 
           // Create a new object that doesn't expose the password
-          const payload = { _id, email, name, image };
+          const payload = { _id, email, name, cookbooks, recipes, image };
 
           // Create and sign the token
           const authToken = jwt.sign(payload, process.env.SECRET, {
@@ -93,8 +93,8 @@ router.post("/login", (req, res, next) => {
     }
     const passwordCorrect = bcrypt.compareSync(password, foundUser.password);
     if (passwordCorrect) {
-      const { _id, name, email, cookbook, image } = foundUser;
-      const payload = { _id, name, email, cookbook, image };
+      const { email, name, _id, image, cookbooks, recipes } = foundUser;
+      const payload = { email, name, _id, image, cookbooks, recipes };
       const authToken = jwt.sign(payload, process.env.SECRET, {
         algorithm: "HS256",
         expiresIn: "6h",

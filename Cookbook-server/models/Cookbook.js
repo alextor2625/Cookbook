@@ -1,7 +1,8 @@
 const { Schema, model } = require("mongoose");
 
 const cookbookSchema = new Schema({
-  recipes:[{type:Schema.Types.ObjectId, ref:'Recipe'}]
+  recipes:[{type:Schema.Types.ObjectId, ref:'Recipe'}],
+  author: {type:Schema.Types.ObjectId, ref:'User'}
 },
 {
     timestamps:true

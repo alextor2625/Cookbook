@@ -3,13 +3,17 @@ const { Schema, model } = require("mongoose");
 const userSchema = new Schema({
   name: {
     type: String,
+    required: true
   },
   email: {
     type: String,
     unique: true,
+    match: /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/,
+    required: true
   },
   password: {
     type: String,
+    required: true
   },
   cookbook: { type: Schema.Types.ObjectId, ref: "Cookbook" },
   image: {

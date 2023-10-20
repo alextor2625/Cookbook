@@ -38,39 +38,6 @@ router.get("/profile/:userId", (req, res, next) => {
       next(err);
     });
 });
-// router.get("/profile", isAuthenticated,(req, res, next) => {
-//   const userId = req.user._id;
-//   User.findById(userId)
-//     .then(foundUser =>{
-//       if(!foundUser.cookbooks.lengh){
-//         if(foundUser.recipes.lengh){
-//           return foundUser.populate('recipes')
-//         }else{
-//           return foundUser;
-//         }
-//       }
-//       else if(!foundUser.recipes.lengh){
-//         if(foundUser.cookbooks.lengh){
-//           return foundUser.populate('cookbooks')
-//         }else{
-//           return foundUser;
-//         }
-//       }
-//       else{
-//         return foundUser.populate("recipes").populate("cookbooks")
-//       }
-//     })
-//     .then((user) => {
-//       const { _id, email, name, cookbooks, recipes, image } = user;
-//       const userInfo = { _id, email, name, cookbooks, recipes, image };
-//       res.json(userInfo);
-//     })
-//     .catch((err) => {
-//       console.log(err);
-//       res.json(err);
-//       next(err);
-//     });
-// });
 
 router.put("/update", isAuthenticated, (req, res, next) => {
   const { name, email, image } = req.body;

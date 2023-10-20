@@ -4,7 +4,7 @@ const User = require("../models/User");
 const Recipe = require("../models/Recipe");
 const isAuthenticated = require("../middleware/isAuthenticated");
 
-router.get("/allrecipes", (req, res, next) => {
+router.get("/allRecipes", (req, res, next) => {
   Recipe.find()
     .populate("author")
     .then((allRecipes) => {

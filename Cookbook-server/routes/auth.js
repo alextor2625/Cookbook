@@ -13,6 +13,7 @@ const isAuthenticated = require("../middleware/isAuthenticated");
 //Bcrypt Saltrounds
 const saltRounds = 10;
 
+//Tested Works
 router.post("/signup", (req, res, next) => {
   const { name, email, password } = req.body;
 
@@ -77,7 +78,7 @@ router.post("/signup", (req, res, next) => {
       res.status(500).json({ message: "Internal Server Error" });
     });
 });
-
+//Tested Works
 router.post("/login", (req, res, next) => {
   const { email, password } = req.body;
 
@@ -109,7 +110,7 @@ router.post("/login", (req, res, next) => {
     res.status(500).json({ message: "Internal Server Error" })
   })
 });
-
+//Tested Works
 router.get('/verify', isAuthenticated, (req, res, next) => {       // <== CREATE NEW ROUTE
  
     // If JWT token is valid the payload gets decoded by the

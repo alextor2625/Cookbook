@@ -9,6 +9,36 @@ router.get("/allrecipes", (req, res, next) => {
     .populate("author")
     .then((allRecipes) => {
       res.json(allRecipes);
+    })
+    .catch((err) => {
+      console.log(err);
+      res.json(err);
+      next(err);
+    });
+});
+
+router.get("/myRecipes", isAuthenticated, (req, res, next) => {
+  User.findById(req.user._id)
+    .then((foundUser) => {
+      if (foundUser.recipes.length) {
+        return foundUser
+          .populate("recipes")
+          .then((foundUser) => {
+            res.json(foundUser.recipes);
+          })
+          .catch((err) => {
+            console.log(err);
+            res.json(err);
+            next(err);
+          });
+      } else {
+        res.json(foundUser.recipes);
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+      res.json(err);
+      next(err);
     });
 });
 
@@ -129,10 +159,10 @@ router.put("/update/:recipeId", isAuthenticated, (req, res, next) => {
           res.json(foundRecipe);
         })
         .catch((err) => {
-            console.log(err);
-            res.json(err);
-            next(err);
-          });
+          console.log(err);
+          res.json(err);
+          next(err);
+        });
     } else {
       res.json({ message: "User is not this recipe's author." });
     }
@@ -140,25 +170,29 @@ router.put("/update/:recipeId", isAuthenticated, (req, res, next) => {
 });
 
 router.delete("/delete/:recipeId", isAuthenticated, (req, res, next) => {
-    const {recipeId} = req.params
-    Recipe.findByIdAndDelete(recipeId)
-    .then(deletedRecipe => {
-        User.findByIdAndUpdate(req.user._id,{$pull:{recipes:recipeId}}, {new:true})
-        .populate('recipes')
-        .then(updatedUser => {
-            res.json(deletedRecipe ,updatedUser)
+  const { recipeId } = req.params;
+  Recipe.findByIdAndDelete(recipeId)
+    .then((deletedRecipe) => {
+      User.findByIdAndUpdate(
+        req.user._id,
+        { $pull: { recipes: recipeId } },
+        { new: true }
+      )
+        .populate("recipes")
+        .then((updatedUser) => {
+          res.json({ deletedRecipe, updatedUser });
         })
         .catch((err) => {
-            console.log(err);
-            res.json(err);
-            next(err);
-          });
+          console.log(err);
+          res.json(err);
+          next(err);
+        });
     })
     .catch((err) => {
-        console.log(err);
-        res.json(err);
-        next(err);
-      });
+      console.log(err);
+      res.json(err);
+      next(err);
+    });
 });
 
 module.exports = router;

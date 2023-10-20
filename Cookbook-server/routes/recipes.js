@@ -3,7 +3,9 @@ var router = express.Router();
 const User = require("../models/User");
 const Recipe = require("../models/Recipe");
 const isAuthenticated = require("../middleware/isAuthenticated");
+const jwt = require("jsonwebtoken");
 
+//Get all recipes
 router.get("/allRecipes", (req, res, next) => {
   Recipe.find()
     .populate("author")
@@ -17,6 +19,7 @@ router.get("/allRecipes", (req, res, next) => {
     });
 });
 
+// Get all user recipes
 router.get("/myRecipes", isAuthenticated, (req, res, next) => {
   User.findById(req.user._id)
     .then((foundUser) => {
@@ -41,7 +44,7 @@ router.get("/myRecipes", isAuthenticated, (req, res, next) => {
       next(err);
     });
 });
-
+// Create a new recipe
 router.post("/create", isAuthenticated, (req, res, next) => {
   const userId = req.user._id;
   const { name, category, ingredients, instructions } = req.body;
@@ -63,7 +66,15 @@ router.post("/create", isAuthenticated, (req, res, next) => {
           )
             .populate("recipes")
             .then((updatedUser) => {
-              res.json(updatedUser);
+              const { _id, email, name, cookbooks, recipes, image } =
+                updatedUser;
+              const user = { _id, email, name, cookbooks, recipes, image };
+              authToken = jwt
+                .sign(user, process.env.SECRET, {
+                  algorithm: "HS256",
+                  expiresIn: "6h",
+                })
+              res.json({ user, authToken });
             })
             .catch((err) => {
               console.log(err);
@@ -84,6 +95,9 @@ router.post("/create", isAuthenticated, (req, res, next) => {
     });
 });
 
+// Copies a recipe from another user if they change ingredients or
+// instructions and adds it to the current user's recipe list and
+// gives changes the alteredBy property to the current user's id.
 router.post("/edit/:recipeId", isAuthenticated, (req, res, next) => {
   const userId = req.user._id;
   const { recipeId } = req.params;
@@ -117,8 +131,15 @@ router.post("/edit/:recipeId", isAuthenticated, (req, res, next) => {
             { new: true }
           )
             .populate("recipes")
-            .then((populatedUser) => {
-              res.json(populatedUser);
+            .then((updatedUser) => {
+              const { _id, email, name, cookbooks, recipes, image } =
+                updatedUser;
+              const user = { _id, email, name, cookbooks, recipes, image };
+              authToken = jwt.sign(user, process.env.SECRET, {
+                algorithm: "HS256",
+                expiresIn: "6h",
+              });
+              res.json({ user, authToken });
             })
             .catch((err) => {
               console.log(err);
@@ -139,6 +160,7 @@ router.post("/edit/:recipeId", isAuthenticated, (req, res, next) => {
   });
 });
 
+// Updates a recipe you are the author of.
 router.put("/update/:recipeId", isAuthenticated, (req, res, next) => {
   const { recipeId } = req.params;
   const { name, category, ingredients, instructions, image } = req.body;
@@ -169,24 +191,101 @@ router.put("/update/:recipeId", isAuthenticated, (req, res, next) => {
   });
 });
 
+// Pins a recipe from another user without changing anything.
+router.put("/add/:recipeId", isAuthenticated, (req, res, next) => {
+  Recipe.findById(req.params.recipeId).then((foundRecipe) => {
+    User.findByIdAndUpdate(
+      req.user._id,
+      { $addToSet: { recipes: foundRecipe._id } },
+      { new: true }
+    )
+      .then((updatedUser) => {
+        const { _id, email, name, cookbooks, recipes, image } = updatedUser;
+        const user = { _id, email, name, cookbooks, recipes, image };
+        authToken = jwt.sign(user, process.env.SECRET, {
+          algorithm: "HS256",
+          expiresIn: "6h",
+        });
+        res.json({ user, authToken });
+      })
+      .catch((err) => {
+        console.log(err);
+        res.json(err);
+        next(err);
+      });
+  });
+});
+
+// Deletes recipes you are the author of from the collection of recipes
+// and from every user's recipe list with the expeption of edited
+// versions of the same recipe from other users.
 router.delete("/delete/:recipeId", isAuthenticated, (req, res, next) => {
   const { recipeId } = req.params;
   Recipe.findByIdAndDelete(recipeId)
     .then((deletedRecipe) => {
-      User.findByIdAndUpdate(
-        req.user._id,
-        { $pull: { recipes: recipeId } },
-        { new: true }
-      )
-        .populate("recipes")
-        .then((updatedUser) => {
-          res.json({ deletedRecipe, updatedUser });
+      User.findById(req.user._id)
+        .then((foundUser) => {
+          // Need to add a condition to block the ones that are not owners from deleting 
+            User.updateMany(
+              { recipes: recipeId },
+              { $pull: { recipes: recipeId } },
+              { new: true }
+            )
+            .then(updatedUsers=> console.log(updatedUsers,'HERE'))
+            .catch((err) => {
+              console.log(err);
+              res.json(err);
+              next(err);
+            });
+          
         })
         .catch((err) => {
           console.log(err);
           res.json(err);
           next(err);
         });
+      User.findById(req.user._id)
+        .populate("recipes")
+        .then((updatedUser) => {
+          const { _id, email, name, cookbooks, recipes, image } = updatedUser;
+          const user = { _id, email, name, cookbooks, recipes, image };
+          authToken = jwt.sign(user, process.env.SECRET, {
+            algorithm: "HS256",
+            expiresIn: "6h",
+          });
+          res.json({ user, authToken });
+        })
+        .catch((err) => {
+          console.log(err);
+          res.json(err);
+          next(err);
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      res.json(err);
+      next(err);
+    });
+});
+
+// Removes recipes the current user pinned. Does not remove them from
+// the main recipe collection.
+router.delete("/remove/:recipeId", isAuthenticated, (req, res, next) => {
+  const { recipeId } = req.params;
+  User.findByIdAndUpdate(
+    req.user._id,
+    { $pull: { recipes: recipeId } },
+    { new: true }
+  )
+    .populate("recipes")
+    .then((updatedUser) => {
+      const { _id, email, name, cookbooks, recipes, image } = updatedUser;
+      const user = { _id, email, name, cookbooks, recipes, image };
+      authToken = jwt.sign(user, process.env.SECRET, {
+        algorithm: "HS256",
+        expiresIn: "6h",
+      });
+      res.json({ user, authToken });
     })
     .catch((err) => {
       console.log(err);

@@ -13,6 +13,7 @@ var authRouter = require('./routes/auth');
 var recipesRouter = require('./routes/recipes');
 var reviewsRouter = require('./routes/reviews');
 var cookbooksRouter = require('./routes/cookbooks');
+var uploadRouter = require('./routes/upload');
 
 var app = express();
 
@@ -40,6 +41,7 @@ app.use('/auth', authRouter);
 app.use('/recipes', recipesRouter);
 app.use('/reviews', reviewsRouter);
 app.use('/cookbooks', cookbooksRouter);
+app.use('/upload', uploadRouter);
 
 
 mongoose

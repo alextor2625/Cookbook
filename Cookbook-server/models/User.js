@@ -22,6 +22,7 @@ const userSchema = new Schema(
     recipes: [
       { type: Schema.Types.ObjectId, ref: "Recipe", default: undefined },
     ],
+    reviews: [{ type: Schema.Types.ObjectId, ref: "Review", default: undefined }],
     image: {
       type: String,
       default:

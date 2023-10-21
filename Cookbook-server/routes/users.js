@@ -42,7 +42,7 @@ router.get("/profile/:userId", isAuthenticated, (req, res, next) => {
       }
     })
     .then((user) => {
-      const { _id, email, name, cookbooks, recipes, image } = user;
+      const { _id, email, name, cookbooks, recipes, reviews, image } = user;
       const userInfo = { _id, email, name, cookbooks, recipes, image };
       res.json(userInfo);
     })
@@ -74,7 +74,7 @@ router.get('/profile', isAuthenticated, (req, res, next) => {
       }
     })
     .then((user) => {
-      const { _id, email, name, cookbooks, recipes, image } = user;
+      const { _id, email, name, cookbooks, recipes, reviews, image } = user;
       const userInfo = { _id, email, name, cookbooks, recipes, image };
       res.json(userInfo);
     })
@@ -145,8 +145,8 @@ router.put("/update", isAuthenticated, (req, res, next) => {
           }
         })
         .then((updatedUser) => {
-          const { _id, email, name, cookbooks, recipes, image } = updatedUser;
-          const user = { _id, email, name, cookbooks, recipes, image };
+          const { _id, email, name, cookbooks, recipes, reviews, image } = updatedUser;
+          const user = { _id, email, name, cookbooks, recipes, reviews, image };
           authToken = jwt.sign(user, process.env.SECRET, {
             algorithm: "HS256",
             expiresIn: "6h",

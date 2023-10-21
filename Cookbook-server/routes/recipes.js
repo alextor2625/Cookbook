@@ -44,6 +44,20 @@ router.get("/myRecipes", isAuthenticated, (req, res, next) => {
       next(err);
     });
 });
+
+// Get a specific recipe.
+router.get("/:recipeId", isAuthenticated, (req, res, next) => {
+  const { recipeId } = req.params;
+  Recipe.findById(recipeId)
+    .then((foundRecipe) => {
+      res.json(foundRecipe);
+    })
+    .catch((err) => {
+      console.log(err);
+      res.json({ message: "Recipe Not found", err });
+      next(err);
+    });
+});
 // Create a new recipe //Tested Works
 router.post("/create", isAuthenticated, (req, res, next) => {
   const userId = req.user._id;
@@ -66,9 +80,9 @@ router.post("/create", isAuthenticated, (req, res, next) => {
           )
             .populate("recipes")
             .then((updatedUser) => {
-              const { _id, email, name, cookbooks, recipes, image } =
+              const { _id, email, name, cookbooks, recipes, reviews, image } =
                 updatedUser;
-              const user = { _id, email, name, cookbooks, recipes, image };
+              const user = { _id, email, name, cookbooks, recipes, reviews, image };
               authToken = jwt.sign(user, process.env.SECRET, {
                 algorithm: "HS256",
                 expiresIn: "6h",
@@ -132,9 +146,9 @@ router.post("/edit/:recipeId", isAuthenticated, (req, res, next) => {
           )
             .populate("recipes")
             .then((updatedUser) => {
-              const { _id, email, name, cookbooks, recipes, image } =
+              const { _id, email, name, cookbooks, recipes, reviews, image } =
                 updatedUser;
-              const user = { _id, email, name, cookbooks, recipes, image };
+              const user = { _id, email, name, cookbooks, recipes, reviews, image };
               authToken = jwt.sign(user, process.env.SECRET, {
                 algorithm: "HS256",
                 expiresIn: "6h",
@@ -200,8 +214,8 @@ router.put("/add/:recipeId", isAuthenticated, (req, res, next) => {
       { new: true }
     )
       .then((updatedUser) => {
-        const { _id, email, name, cookbooks, recipes, image } = updatedUser;
-        const user = { _id, email, name, cookbooks, recipes, image };
+        const { _id, email, name, cookbooks, recipes, reviews, image } = updatedUser;
+        const user = { _id, email, name, cookbooks, recipes, reviews, image };
         authToken = jwt.sign(user, process.env.SECRET, {
           algorithm: "HS256",
           expiresIn: "6h",
@@ -220,9 +234,13 @@ router.put("/add/:recipeId", isAuthenticated, (req, res, next) => {
 // and from every user's recipe list with the expeption of edited
 // versions of the same recipe from other users.    //Tested Works
 router.delete("/delete/:recipeId", isAuthenticated, (req, res, next) => {
-    const { recipeId } = req.params;
-    Recipe.findById(recipeId).then((foundRecipe) => {
-      if (req.user._id == foundRecipe.author || req.user._id == foundRecipe.alteredBy) {
+  const { recipeId } = req.params;
+  Recipe.findById(recipeId)
+    .then((foundRecipe) => {
+      if (
+        req.user._id == foundRecipe.author ||
+        req.user._id == foundRecipe.alteredBy
+      ) {
         Recipe.findByIdAndDelete(recipeId)
           .then((deletedRecipe) => {
             console.log(deletedRecipe, "Recipe Was Deleted");
@@ -251,8 +269,8 @@ router.delete("/delete/:recipeId", isAuthenticated, (req, res, next) => {
         User.findById(req.user._id)
           .populate("recipes")
           .then((updatedUser) => {
-            const { _id, email, name, cookbooks, recipes, image } = updatedUser;
-            const user = { _id, email, name, cookbooks, recipes, image };
+            const { _id, email, name, cookbooks, recipes, reviews, image } = updatedUser;
+            const user = { _id, email, name, cookbooks, recipes, reviews, image };
             authToken = jwt.sign(user, process.env.SECRET, {
               algorithm: "HS256",
               expiresIn: "6h",
@@ -264,17 +282,18 @@ router.delete("/delete/:recipeId", isAuthenticated, (req, res, next) => {
             res.json(err);
             next(err);
           });
-      } else{
-        res.json({message:"User Doesn't Have Any Ownership Over This Recipe."})
+      } else {
+        res.json({
+          message: "User Doesn't Have Any Ownership Over This Recipe.",
+        });
       }
     })
     .catch((err) => {
       console.log(err);
-      res.json({message:"Recipe Doesnt Exist"});
+      res.json({ message: "Recipe Doesnt Exist" });
       next(err);
     });
-  }
-);
+});
 
 // Removes recipes the current user pinned. Does not remove them from
 // the main recipe collection.  //Tested Works
@@ -287,8 +306,8 @@ router.delete("/remove/:recipeId", isAuthenticated, (req, res, next) => {
   )
     .populate("recipes")
     .then((updatedUser) => {
-      const { _id, email, name, cookbooks, recipes, image } = updatedUser;
-      const user = { _id, email, name, cookbooks, recipes, image };
+      const { _id, email, name, cookbooks, recipes, reviews, image } = updatedUser;
+      const user = { _id, email, name, cookbooks, recipes, reviews, image };
       authToken = jwt.sign(user, process.env.SECRET, {
         algorithm: "HS256",
         expiresIn: "6h",
